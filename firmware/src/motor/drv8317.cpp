@@ -3,6 +3,8 @@
 #include <hardware/clocks.h>
 #include <hardware/gpio.h>
 #include <hardware/pwm.h>
+#include <hardware/sync.h>
+#include <hardware/timer.h>
 
 #include "config.h"
 #include "hardware.h"
@@ -27,7 +29,7 @@ void Drv8317::begin() {
 void Drv8317::setAwake(bool awake) {
   gpio_put(PIN_DRV_NSLEEP, awake ? 1 : 0);
   if (awake && !awake_) {
-    delay(2);  // tWAKE: charge pump + CSA startup (datasheet ~1 ms)
+    delay(DRV_WAKE_MS);  // tWAKE: nSLEEP = 1 to output ready, datasheet max 3 ms
   }
   awake_ = awake;
 }
@@ -37,11 +39,15 @@ bool Drv8317::isAwake() { return awake_; }
 bool Drv8317::faultActive() { return gpio_get(PIN_DRV_NFAULT) == 0; }
 
 void Drv8317::clearFault() {
-  // A short nSLEEP low pulse clears latched faults without a full sleep cycle.
+  // nSLEEP reset pulse: low for tRST (datasheet 15 - 50 us) clears latched
+  // faults without a full sleep cycle. Longer than 50 us starts the shutdown
+  // sequence instead, so the pulse is timed with interrupts off.
+  const uint32_t irq = save_and_disable_interrupts();
   gpio_put(PIN_DRV_NSLEEP, 0);
-  delayMicroseconds(20);
+  busy_wait_us_32(DRV_RESET_PULSE_US);
   gpio_put(PIN_DRV_NSLEEP, 1);
-  delay(2);
+  restore_interrupts(irq);
+  delay(DRV_WAKE_MS);
   awake_ = true;
 }
 
@@ -95,9 +101,16 @@ void ThreePhasePwm::setDuties(float a, float b, float c) {
     if (d < 0.0f) d = 0.0f;
     if (d > PWM_MAX_DUTY) d = PWM_MAX_DUTY;
     // Inverted output: high while counter >= level, so level = (1 - duty) * span.
+    // The low side is on while counter < level, so level is also the half-width
+    // of the low-side window around the valley, in clocks.
     uint16_t level = (uint16_t)((1.0f - d) * span + 0.5f);
     pwm_set_chan_level(slice_[i], chan_[i], level);
+    level_[i] = level;
   }
+}
+
+uint32_t ThreePhasePwm::counter() {
+  return (syncSlice_ < 0) ? 0u : pwm_get_counter((uint)syncSlice_);
 }
 
 void ThreePhasePwm::startAll() {

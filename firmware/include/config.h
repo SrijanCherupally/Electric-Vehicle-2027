@@ -67,7 +67,8 @@
 #define KD_HEADING 0.10f         // [P] per (rad/s) of yaw rate
 #define KP_LATERAL 3.0f          // [P] rad of heading per m of lateral drift
 #define MAX_HEADING_CORR_RAD 0.30f  // [P] lateral correction heading clamp
-#define MOTOR_VOLTAGE_LIMIT_V 6.0f  // [P] per-motor |Uq| ceiling (also clamped to Vbus / sqrt(3))
+#define MOTOR_VOLTAGE_LIMIT_V 6.0f  // [P] per-motor |Uq| ceiling (also clamped to
+                                    // (2 * PWM_MAX_DUTY - 1) * Vbus / sqrt(3), see foc.h)
 #define VEL_FILTER_HZ 40.0f      // wheel speed low-pass cutoff
 #define HEADING_ENCODER_WEIGHT 0.0f  // 0 = gyro only, 1 = wheel-difference only
 
@@ -114,10 +115,18 @@
 #define CSA_GAIN_V_PER_A 0.25f
 #define CSA_SIGN (-1.0f)            // flip if measured Iq has the wrong sign
 #define CURRENT_SENSE_ENABLED 1     // sample phase currents every FOC cycle
+// A phase sample counts only if its conversion finishes this long before that
+// phase's low side turns off (datasheet: CSA settles to 1% in 1 us). Samples
+// that miss the window are dropped and the last valid currents are held.
+#define CSA_SAMPLE_MARGIN_US 0.5f
 #define CURRENT_OFFSET_SAMPLES 2000
 #define OVERCURRENT_A 3.0f          // |Iq| above this ...
 #define OVERCURRENT_TIME_MS 50      // ... for this long latches a fault (0 = off)
 #define COMMAND_TIMEOUT_MS 100      // core 1 brakes if core 0 stops sending commands
+
+// DRV8317 nSLEEP timing (datasheet SLVSGT3, 7.5): tRST 15 - 50 us, tWAKE max 3 ms.
+#define DRV_RESET_PULSE_US 30
+#define DRV_WAKE_MS 3
 
 // ---------- Battery (8x AA NiMH / alkaline) ----------
 #define VBAT_NOMINAL_V 9.6f
@@ -125,7 +134,12 @@
 #define VBAT_FILTER_ALPHA 0.02f
 
 // ---------- IMU ----------
-#define IMU_YAW_AXIS 2               // 0 = X, 1 = Y, 2 = Z (board flat: Z)
+// The BOM part (ICM-42688-P from TOKMAS, LCSC C54308212) may not report the
+// TDK WHO_AM_I (0x47). With this set, any other ID except 0x00 / 0xFF (no SPI
+// response) is accepted if the accelerometer then reads about 1 g. Boot prints
+// the ID it found.
+#define IMU_ACCEPT_UNKNOWN_WHO_AM_I 1
+#define IMU_YAW_AXIS 2              // 0 = X, 1 = Y, 2 = Z (board flat: Z)
 #define IMU_YAW_SIGN (+1.0f)         // + = counter-clockwise seen from above is positive
 #define GYRO_SCALE 1.000f            // [P] yaw rate scale trim
 #define GYRO_CAL_MS 1500             // bias average time after alignment

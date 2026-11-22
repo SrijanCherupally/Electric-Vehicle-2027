@@ -31,6 +31,11 @@ AlphaBeta inversePark(DQ x, float sinTheta, float cosTheta);
 // Space-vector PWM via midpoint clamping: returns duties 0..1 for a, b, c.
 void svpwm(AlphaBeta v, float vbus, float& da, float& db, float& dc);
 
+// Largest voltage vector svpwm() can make without any phase clipping at
+// PWM_MAX_DUTY. Midpoint clamping gives duty = 0.5 +- (hi - lo) / (2 vbus) and
+// hi - lo peaks at sqrt(3) |V|, so |V| <= (2 * PWM_MAX_DUTY - 1) * vbus / sqrt(3).
+float maxVoltage(float vbus);
+
 }  // namespace foc
 
 // ---------------------------------------------------------------------------
@@ -62,8 +67,9 @@ class FocMotor {
   void setTarget(float target) { target_ = target; }
 
   // One commutation step. Reads the encoder, so call every FOC cycle even
-  // when braking to keep position() fresh.
-  void update(float vbus, float ia, float ib, bool drive);
+  // when braking to keep position() fresh. currentValid = false holds the last
+  // measured currents (sample missed the low-side window).
+  void update(float vbus, float ia, float ib, bool currentValid, bool drive);
   void brake();  // zero voltage vector: phases shorted through the low sides
 
   // Motor-positive position: positive target makes this count up.
@@ -92,6 +98,7 @@ class FocMotor {
   float uq_ = 0.0f;
   float iqFilt_ = 0.0f;
   float idFilt_ = 0.0f;
+  foc::DQ iLast_ = {0.0f, 0.0f};  // last valid measured dq currents
 
   // Current-mode PI state
   float iqInt_ = 0.0f;

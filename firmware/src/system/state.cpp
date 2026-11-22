@@ -69,13 +69,15 @@ void startRun() {
   localizer::reset();
   controller::reset();
   telemetry::logStart();
+  // enter() prints; do it before requesting Run so a USB write that blocks
+  // (host attached but not reading) cannot eat into COMMAND_TIMEOUT_MS.
+  enter(State::Running);
   g_runStartUs = micros();
   g_runT = 0.0f;
   g_holding = false;
   g_lastDir = 1;
   drivetrain.zeroCommands();
   motorcore::setMode(DriveMode::Run);
-  enter(State::Running);
 }
 
 void finishRun(const char* why) {
@@ -85,8 +87,8 @@ void finishRun(const char* why) {
   const float dx = p.x - g_plan.xFinal;
   Serial.printf("RUN END (%s): t=%.3f s (plan %.3f, target %.2f)\n", why, g_runT,
                 g_plan.plannedTime, params.targetTime);
-  Serial.printf("  x=%.4f m (target %.4f, err %+.1f cm), y=%+.1f cm, heading=%+.2f deg\n", p.x,
-                g_plan.xFinal, dx * 100.0f, p.y * 100.0f, p.heading * RAD_TO_DEG);
+  Serial.printf("  x=%.4f m (target %.4f, err %+.1f cm), y=%+.1f cm, heading=%+.2f deg, path %.4f m\n",
+                p.x, g_plan.xFinal, dx * 100.0f, p.y * 100.0f, p.heading * RAD_TO_DEG, p.path);
   Serial.printf("  est. vehicle distance %.1f cm, %u log samples ('dump' to export)\n",
                 sqrtf(dx * dx + p.y * p.y) * 100.0f, (unsigned)telemetry::logCount());
   enter(State::Finished);
@@ -172,8 +174,10 @@ void init() {
 }
 
 void update(float dt) {
-  // Motor core faults preempt everything.
-  const MotorFault mf = motorcore::fault();
+  // Motor core faults preempt everything. While a clear is still being
+  // processed on core 1, fault() holds the old value: ignore it until acked.
+  const bool clearing = motorcore::clearPending();
+  const MotorFault mf = clearing ? MotorFault::None : motorcore::fault();
   if (mf != MotorFault::None && g_state != State::Fault) {
     char msg[64];
     snprintf(msg, sizeof(msg), "motor core: %s", motorcore::faultName(mf));
@@ -183,7 +187,7 @@ void update(float dt) {
   switch (g_state) {
     case State::Boot:
       statusLed.set(LedPattern::FastBlink);
-      if (motorcore::ready()) {
+      if (motorcore::ready() && !clearing) {
         Serial.println("ALIGN: aligning both motors (wheels will twitch)...");
         motorcore::requestAlign();
         enter(State::Aligning);
@@ -337,9 +341,9 @@ bool requestMotorTest(float volts, float seconds, bool kvCalibrate) {
   g_testSumL = g_testSumR = 0.0;
   g_testSamples = 0;
   localizer::reset();
+  enter(State::Test);  // prints: before Run, see startRun()
   drivetrain.zeroCommands();
   motorcore::setMode(DriveMode::Run);
-  enter(State::Test);
   return true;
 }
 
@@ -360,10 +364,11 @@ void printStatus(Print& out) {
   out.printf("foc loop %.0f Hz, align %s / %s, motor fault: %s\n", motorcore::loopRateHz(),
              alignResultName(motorcore::alignResult(0)), alignResultName(motorcore::alignResult(1)),
              motorcore::faultName(motorcore::fault()));
-  out.printf("pose x=%.4f y=%.4f heading=%.2f deg, speed %.3f m/s\n", p.x, p.y,
-             p.heading * RAD_TO_DEG, p.speed);
-  out.printf("motor counts M1 %ld, M2 %ld; iq %.3f / %.3f A\n", (long)motorcore::position(0),
-             (long)motorcore::position(1), motorcore::iq(0), motorcore::iq(1));
+  out.printf("pose x=%.4f y=%.4f heading=%.2f deg, path %.4f m, speed %.3f m/s\n", p.x, p.y,
+             p.heading * RAD_TO_DEG, p.path, p.speed);
+  out.printf("motor counts M1 %ld, M2 %ld; iq %.3f / %.3f A (current samples valid %.0f%% / %.0f%%)\n",
+             (long)motorcore::position(0), (long)motorcore::position(1), motorcore::iq(0),
+             motorcore::iq(1), motorcore::currentSenseValidPct(0), motorcore::currentSenseValidPct(1));
   out.printf("imu %s, gyro bias %.5f rad/s, yaw rate %.4f rad/s\n",
              imu.isInitialized() ? "ok" : "MISSING", imu.bias(), imu.yawRate());
   out.printf("plan %s, %.3f s planned for %.3f s budget\n", g_plan.valid ? "valid" : g_plan.error,

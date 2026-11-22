@@ -31,8 +31,14 @@ class ThreePhasePwm {
   void setDuties(float a, float b, float c);   // high-side duty 0..1 per phase
   void setNeutral() { setDuties(0.5f, 0.5f, 0.5f); }  // zero voltage vector = brake
 
+  // Compare level of a phase as last written (0..TOP+1). Levels latch at the
+  // PWM wrap, so right after waitForPeriodStart() this is the level in force.
+  // The low side of that phase is on while counter() < level.
+  uint16_t level(uint8_t phase) const { return level_[phase]; }
+
   static void startAll();             // start every configured slice in phase
   static void waitForPeriodStart();   // block until the next PWM wrap
+  static uint32_t counter();          // shared counter, counts up from 0 after the wrap
   static uint32_t top() { return top_; }
   static float frequencyHz();
 
@@ -40,6 +46,7 @@ class ThreePhasePwm {
   uint pins_[3];
   uint slice_[3];
   uint chan_[3];
+  uint16_t level_[3] = {0, 0, 0};
 
   static uint32_t sliceMask_;
   static uint32_t top_;

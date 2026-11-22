@@ -67,13 +67,14 @@ firmware/
 Do this with the car on a stand, wheels off the ground.
 
 1. **Encoders need no setup.** The encoder boards use the MT6701QT-ACD (LCSC C49257133), which comes factory-programmed: ABZ output, 1024 PPR, Z width 1 LSB. ABZ is selected in hardware (MODE tied to GND on the encoder PCB). Keep `MT6701_ABZ_PPR = 1024`.
-2. **Check `config.h` against the real hardware:** `MOTOR_POLE_PAIRS`, `GEAR_RATIO`, and `CSA_GAIN_V_PER_A` (check the DRV8317 GAIN-pin table; GAIN is tied to GND on this board).
-3. **Boot and watch the serial log.** It should go `ALIGN: ok` → `GYRO` → `READY`. For each motor, alignment prints a line like `ALIGN M1: ok, 585 counts/e-rev (expect 585) -> MT6701 ~1024 PPR`. If alignment fails, it tells you why:
+2. **Check `config.h` against the real hardware:** `MOTOR_POLE_PAIRS` and `GEAR_RATIO`. `CSA_GAIN_V_PER_A = 0.25` matches the DRV8317H datasheet for GAIN tied to AGND, which is how this board is wired.
+3. **Boot and watch the serial log.** First check the `IMU: WHO_AM_I = 0x..` line. The TDK part reads 0x47. The TOKMAS ICM-42688-P on the BOM may read a different ID. Any ID except 0x00/0xFF is accepted if the accelerometer reads about 1 g at rest (`IMU_ACCEPT_UNKNOWN_WHO_AM_I`). An ID of 0x00 or 0xFF means there was no SPI response. Write down the ID your board reports. After that the log should go `ALIGN: ok` → `GYRO` → `READY`. For each motor, alignment prints a line like `ALIGN M1: ok, 585 counts/e-rev (expect 585) -> MT6701 ~1024 PPR`. If alignment fails, it tells you why:
    - **no encoder counts:** check the SH1.0 cable orientation (these cables are often reversed), the magnet gap (0.5–2 mm) and centering (within 0.3 mm), the 3V3 at the port, and the motor phases
    - **counts per e-rev wrong:** almost always `MOTOR_POLE_PAIRS` (585 counts/e-rev is what a 7-pole-pair motor gives at 1024 PPR)
 4. **Check directions.** Run `mtest 1`. Both wheels should spin **forward**. If one spins backwards, flip `LEFT_WHEEL_DIR` / `RIGHT_WHEEL_DIR`. If left and right are swapped, swap `LEFT_MOTOR_INDEX` / `RIGHT_MOTOR_INDEX`.
 5. **Check the gyro sign.** Run `tele on`, then turn the car counter-clockwise by hand. `heading_deg` should increase. If it doesn't, flip `IMU_YAW_SIGN`.
 6. **Measure the back-EMF feedforward.** Run `kvcal 2`, then `save`. This sets `kff_vel`.
+7. **Check current-sense coverage under load.** During `mtest`, `status` shows `current samples valid N% / N%`. Current is only sampled while the low-side FET is on. At high phase duty that window gets too short, so the sample is dropped and the last good value is held. If coverage stays low at your run voltage, the iq readings and the software overcurrent check are running on stale values. DRV8317 OCP (nFAULT) still protects the hardware either way.
 
 ## Calibration (on the floor)
 

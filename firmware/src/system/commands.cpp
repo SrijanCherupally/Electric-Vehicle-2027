@@ -167,6 +167,7 @@ void execute(int argc, char** argv) {
     telemetry::setLive(on);
     Serial.printf("live telemetry %s\n", on ? "on" : "off");
   } else if (!strcasecmp(c, "dump")) {
+    if (notWhileRunning()) return;  // ~100 kB of output would stall the control tick
     telemetry::logDump(Serial);
   } else if (!strcasecmp(c, "mtest")) {
     cmdMotorTest(argc, argv, false);

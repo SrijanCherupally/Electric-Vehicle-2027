@@ -45,6 +45,8 @@ void svpwm(AlphaBeta v, float vbus, float& da, float& db, float& dc) {
   dc = 0.5f + (uc - mid) * inv;
 }
 
+float maxVoltage(float vbus) { return (2.0f * PWM_MAX_DUTY - 1.0f) * vbus * INV_SQRT3_F; }
+
 }  // namespace foc
 
 // ---------------------------------------------------------------------------
@@ -152,7 +154,7 @@ AlignResult FocMotor::align(float vbus) {
   return AlignResult::Ok;
 }
 
-void FocMotor::update(float vbus, float ia, float ib, bool drive) {
+void FocMotor::update(float vbus, float ia, float ib, bool currentValid, bool drive) {
   const int32_t raw = enc_.read();
   position_ = aligned_ ? (int32_t)dir_ * (raw - zeroOffset_) : raw;
 
@@ -167,12 +169,17 @@ void FocMotor::update(float vbus, float ia, float ib, bool drive) {
   c = cosf(theta);
 
 #if CURRENT_SENSE_ENABLED
-  const foc::DQ i = foc::park(foc::clarke(ia, ib), s, c);
-  iqFilt_ += CURRENT_FILTER_ALPHA * (i.q - iqFilt_);
-  idFilt_ += CURRENT_FILTER_ALPHA * (i.d - idFilt_);
+  // Samples outside the low-side window are dropped by CurrentSense; hold the
+  // last valid dq currents rather than filtering in garbage.
+  if (currentValid) {
+    iLast_ = foc::park(foc::clarke(ia, ib), s, c);
+    iqFilt_ += CURRENT_FILTER_ALPHA * (iLast_.q - iqFilt_);
+    idFilt_ += CURRENT_FILTER_ALPHA * (iLast_.d - idFilt_);
+  }
 #else
   (void)ia;
   (void)ib;
+  (void)currentValid;
 #endif
 
   if (!drive) {
@@ -180,7 +187,7 @@ void FocMotor::update(float vbus, float ia, float ib, bool drive) {
     return;
   }
 
-  const float vLimit = vbus * INV_SQRT3_F;  // max undistorted phase amplitude
+  const float vLimit = foc::maxVoltage(vbus);  // max vector with no phase clipped at PWM_MAX_DUTY
   float ud = 0.0f;
   float uq = 0.0f;
 
@@ -188,8 +195,8 @@ void FocMotor::update(float vbus, float ia, float ib, bool drive) {
   // dq current loop: Id -> 0, Iq -> target (amps).
   const float dt = (float)FOC_LOOP_DIVIDER / ThreePhasePwm::frequencyHz();
   const float iqRef = clampf(target_, FOC_CURRENT_LIMIT_A);
-  const float eq = iqRef - i.q;
-  const float ed = 0.0f - i.d;
+  const float eq = iqRef - iLast_.q;
+  const float ed = 0.0f - iLast_.d;
   iqInt_ = clampf(iqInt_ + FOC_CURRENT_KI * eq * dt, vLimit);
   idInt_ = clampf(idInt_ + FOC_CURRENT_KI * ed * dt, vLimit);
   uq = FOC_CURRENT_KP * eq + iqInt_ + FOC_PHASE_RESISTANCE_OHM * iqRef;

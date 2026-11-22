@@ -29,6 +29,9 @@ class IMU {
   void trackBias(float dt);
 
  private:
+  static uint8_t readReg(uint8_t reg);
+  static void writeReg(uint8_t reg, uint8_t value);
+
   ICM42688 imu_;
   bool initialized_ = false;
   float rawYaw_ = 0.0f;

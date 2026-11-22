@@ -1,5 +1,8 @@
 #include "system/telemetry.h"
 
+#include <stdarg.h>
+#include <stdio.h>
+
 #include "config.h"
 #include "control/controller.h"
 #include "control/localizer.h"
@@ -34,6 +37,34 @@ uint32_t g_lastLiveUs = 0;
 void setLive(bool on) { g_live = on; }
 bool live() { return g_live; }
 
+namespace {
+
+// Teleplot is lossy by nature, so never block on it. SerialUSB::write() waits
+// up to 1 s when a host holds DTR but is not reading (Serial.ignoreFlowControl()
+// would not help: it only makes writes happen without DTR). Send a chunk only
+// if it fits in the USB TX FIFO right now; otherwise drop it.
+uint32_t g_dropped = 0;
+
+void sendLossy(const char* fmt, ...) __attribute__((format(printf, 1, 2)));
+void sendLossy(const char* fmt, ...) {
+  char buf[160];
+  va_list ap;
+  va_start(ap, fmt);
+  int n = vsnprintf(buf, sizeof(buf), fmt, ap);
+  va_end(ap);
+  if (n <= 0) return;
+  if (n >= (int)sizeof(buf)) n = sizeof(buf) - 1;
+  if (Serial.availableForWrite() >= n) {
+    Serial.write(reinterpret_cast<const uint8_t*>(buf), (size_t)n);
+  } else {
+    ++g_dropped;
+  }
+}
+
+}  // namespace
+
+uint32_t droppedFrames() { return g_dropped; }
+
 void update() {
   if (!g_live) return;
   const uint32_t now = micros();
@@ -42,13 +73,13 @@ void update() {
 
   const Pose& p = localizer::pose();
   const ControllerDebug& d = controller::debug();
-  Serial.printf(">x:%.4f\n>x_ref:%.4f\n>y:%.4f\n>heading_deg:%.2f\n", p.x, d.ref.pos, p.y,
-                p.heading * RAD_TO_DEG);
-  Serial.printf(">v:%.3f\n>v_ref:%.3f\n>v_left:%.3f\n>v_right:%.3f\n", p.speed, d.ref.vel,
-                drivetrain.left().velocity(), drivetrain.right().velocity());
-  Serial.printf(">u_left:%.2f\n>u_right:%.2f\n>iq1:%.3f\n>iq2:%.3f\n>vbat:%.2f\n",
-                drivetrain.lastLeftCmd(), drivetrain.lastRightCmd(), motorcore::iq(0),
-                motorcore::iq(1), battery::voltage());
+  sendLossy(">x:%.4f\n>x_ref:%.4f\n>y:%.4f\n>heading_deg:%.2f\n", p.x, d.ref.pos, p.y,
+            p.heading * RAD_TO_DEG);
+  sendLossy(">v:%.3f\n>v_ref:%.3f\n>v_left:%.3f\n>v_right:%.3f\n", p.speed, d.ref.vel,
+            drivetrain.left().velocity(), drivetrain.right().velocity());
+  sendLossy(">u_left:%.2f\n>u_right:%.2f\n>iq1:%.3f\n>iq2:%.3f\n>vbat:%.2f\n",
+            drivetrain.lastLeftCmd(), drivetrain.lastRightCmd(), motorcore::iq(0),
+            motorcore::iq(1), battery::voltage());
 }
 
 void logStart() {

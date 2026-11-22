@@ -10,14 +10,14 @@
 namespace localizer {
 
 namespace {
-Pose g_pose = {0, 0, 0, 0, 0};
+Pose g_pose = {0, 0, 0, 0, 0, 0};
 float g_lastX = 0.0f;
 float g_lastWheelDiff = 0.0f;
 }  // namespace
 
 void reset() {
   drivetrain.reset();
-  g_pose = {0, 0, 0, 0, 0};
+  g_pose = {0, 0, 0, 0, 0, 0};
   g_lastX = 0.0f;
   g_lastWheelDiff = 0.0f;
 }
@@ -46,11 +46,12 @@ void update(float dt) {
     yawRate = (dt > 0.0f) ? dHeadingEnc / dt : 0.0f;
   }
 
-  // Midpoint integration for the lateral offset.
+  // Midpoint integration: project each wheel-travel step onto the track.
   const float midHeading = g_pose.heading + 0.5f * dHeading;
   g_pose.heading += dHeading;
+  g_pose.x += dx * cosf(midHeading);
   g_pose.y += dx * sinf(midHeading);
-  g_pose.x = x;
+  g_pose.path = x;
   g_pose.yawRate = yawRate;
   g_pose.speed = drivetrain.speed();
 }

@@ -1,5 +1,7 @@
 #include "motor/motor_core.h"
 
+#include <hardware/sync.h>
+
 #include "config.h"
 #include "hardware.h"
 #include "motor/current_sense.h"
@@ -42,6 +44,8 @@ volatile float s_vbus = VBAT_NOMINAL_V;
 volatile float s_loopRate = 0.0f;
 volatile MotorFault s_fault = MotorFault::None;
 volatile uint32_t s_clearFaultSeq = 0;
+volatile uint32_t s_clearAckSeq = 0;  // = s_clearFaultSeq once core 1 has cleared
+volatile float s_senseValidPct[MOTOR_COUNT] = {0.0f, 0.0f};
 
 // ---------- core 1 bookkeeping ----------
 uint32_t c1_alignHandledSeq = 0;
@@ -54,6 +58,8 @@ uint32_t c1_vbatDivider = 0;
 uint32_t c1_rateCount = 0;
 uint32_t c1_rateStartUs = 0;
 uint8_t c1_nfaultCount = 0;
+uint32_t c1_senseValid[MOTOR_COUNT] = {0, 0};
+uint32_t c1_senseTotal = 0;
 
 void latchFault(MotorFault f) {
   if (s_fault == MotorFault::None) s_fault = f;
@@ -96,6 +102,11 @@ void updateLoopRate() {
   const uint32_t elapsed = now - c1_rateStartUs;
   if (elapsed >= 500000u) {
     s_loopRate = (float)c1_rateCount * 1e6f / (float)elapsed;
+    for (uint8_t i = 0; i < MOTOR_COUNT; ++i) {
+      s_senseValidPct[i] = c1_senseTotal ? 100.0f * (float)c1_senseValid[i] / (float)c1_senseTotal : 0.0f;
+      c1_senseValid[i] = 0;
+    }
+    c1_senseTotal = 0;
     c1_rateCount = 0;
     c1_rateStartUs = now;
   }
@@ -139,14 +150,20 @@ void setup() {
 void loop() {
   // ---- One-shot requests from core 0 ----
   if (s_clearFaultSeq != c1_clearHandledSeq) {
-    c1_clearHandledSeq = s_clearFaultSeq;
-    Drv8317::clearFault();
-    Drv8317::setAwake(false);
+    const uint32_t seq = s_clearFaultSeq;
+    c1_clearHandledSeq = seq;
+    // Clear the software latch first, then pulse nSLEEP (~3 ms). Core 0 keeps
+    // ignoring fault() until it sees the ack, so it cannot re-enter FAULT on
+    // the stale value while the driver is being reset.
     s_activeMode = DriveMode::Off;
     s_requestedMode = DriveMode::Off;
     c1_nfaultCount = 0;
     c1_overcurrentSinceMs = 0;
     s_fault = MotorFault::None;
+    Drv8317::clearFault();
+    Drv8317::setAwake(false);
+    __dmb();  // fault/mode writes visible to core 0 before the ack
+    s_clearAckSeq = seq;
   }
   if (s_alignRequestSeq != c1_alignHandledSeq) {
     c1_alignHandledSeq = s_alignRequestSeq;
@@ -163,7 +180,11 @@ void loop() {
   c1_divider = 0;
 
 #if CURRENT_SENSE_ENABLED
-  g_sense.sample();
+  g_sense.sample(g_pwm);
+  ++c1_senseTotal;
+  for (uint8_t i = 0; i < MOTOR_COUNT; ++i) {
+    if (g_sense.valid(i)) ++c1_senseValid[i];
+  }
 #endif
 
   if (++c1_vbatDivider >= 64) {
@@ -198,7 +219,7 @@ void loop() {
   for (uint8_t i = 0; i < MOTOR_COUNT; ++i) {
     FocMotor& m = g_motor[i];
     m.setTarget(s_command[i]);
-    m.update(vbus, g_sense.phaseA(i), g_sense.phaseB(i), drive);
+    m.update(vbus, g_sense.phaseA(i), g_sense.phaseB(i), g_sense.valid(i), drive);
     s_position[i] = m.position();
     s_iq[i] = m.iq();
     s_uq[i] = m.uq();
@@ -251,6 +272,7 @@ float iq(uint8_t m) { return m < MOTOR_COUNT ? s_iq[m] : 0.0f; }
 float command(uint8_t m) { return m < MOTOR_COUNT ? s_uq[m] : 0.0f; }
 float busVoltage() { return s_vbus; }
 float loopRateHz() { return s_loopRate; }
+float currentSenseValidPct(uint8_t m) { return m < MOTOR_COUNT ? s_senseValidPct[m] : 0.0f; }
 
 MotorFault fault() { return s_fault; }
 
@@ -268,5 +290,7 @@ void clearFault() {
   s_requestedMode = DriveMode::Off;
   s_clearFaultSeq = s_clearFaultSeq + 1;
 }
+
+bool clearPending() { return s_clearAckSeq != s_clearFaultSeq; }
 
 }  // namespace motorcore

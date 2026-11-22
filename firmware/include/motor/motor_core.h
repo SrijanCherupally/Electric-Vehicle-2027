@@ -54,10 +54,15 @@ float iq(uint8_t motor);          // filtered, A
 float command(uint8_t motor);     // last applied Uq, V
 float busVoltage();               // filtered battery voltage, V
 float loopRateHz();               // measured FOC rate
+// Share of FOC cycles (last 0.5 s) whose current sample landed inside the
+// low-side windows. Low under load = Iq and the software overcurrent check are
+// running on held values; DRV8317 OCP (nFAULT) still protects.
+float currentSenseValidPct(uint8_t motor);
 
 MotorFault fault();
 const char* faultName(MotorFault f);
-void clearFault();  // also returns to Off
+void clearFault();     // also returns to Off; completes asynchronously on core 1
+bool clearPending();   // true until core 1 has cleared the fault (fault() is stale)
 
 }  // namespace motorcore
 

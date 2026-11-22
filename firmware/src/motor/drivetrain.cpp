@@ -14,7 +14,7 @@ inline float clampf(float x, float lim) { return x > lim ? lim : (x < -lim ? -li
 
 // Usable command magnitude: user limit, and never more than the bus can make.
 float commandLimit() {
-  const float busLimit = motorcore::busVoltage() * 0.57735f;
+  const float busLimit = foc::maxVoltage(motorcore::busVoltage());
   return fminf(params.motorVoltageLimit, busLimit);
 }
 
