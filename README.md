@@ -4,6 +4,7 @@ HW and SW for my Electric Vehicle 2027 season!
 ## Hardware
 
 - [`hardware/controller-v1`](hardware/controller-v1) — main controller PCB (RP2350B + 2x DRV8317H FOC drivers, 4-layer). Schematic, PCB, and JLCPCB fab files.
+- [`hardware/encoder-v1`](hardware/encoder-v1) — MT6701 magnetic ABZ encoder (17.6 mm square, 2-layer), four per car for the motors and odometry wheels.
 
 ## Firmware
 

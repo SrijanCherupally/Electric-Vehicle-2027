@@ -1,0 +1,368 @@
+{
+  "version": "2.0.0",
+  "components": {
+    "gge3": {
+      "props": {
+        "Name": "100nF",
+        "Designator": "C1",
+        "Footprint": "d8d72a170ab2143e",
+        "LCSC Part Name": "100nF ±10% 16V",
+        "Supplier Part": "C1525",
+        "Manufacturer": "SAMSUNG(三星)",
+        "Manufacturer Part": "CL05B104KO5NNNC",
+        "Supplier Footprint": "0402",
+        "JLCPCB Part Class": "Basic Part",
+        "Datasheet": "https://item.szlcsc.com/datasheet/CL05B104KO5NNNC/1877.html",
+        "Supplier": "LCSC",
+        "Add into BOM": "yes",
+        "3D Model": "b7d13df3e9464d7a99d0651d1a5b4d57|0819f05c4eef4c71ace90d822a990e87",
+        "3D Model Title": "C0402_L1.0-W0.5-H0.5",
+        "3D Model Transform": "39.37,19.685,0,0,0,0,0,0,0",
+        "Value": "100nF",
+        "Tolerance": "±10%",
+        "Voltage Rating": "16V",
+        "Temperature Coefficient": "X7R",
+        "Description": "Capacitance:100nF Tolerance:±10% Tolerance:±10% Voltage Rating:16V Temperature Coefficient:X7R",
+        "Device": "83490542c14ff341",
+        "Unique ID": "gge3",
+        "Reuse Block": "",
+        "Group ID": "",
+        "Channel ID": "$1I4",
+        "FootprintName": "C0402",
+        "DeviceName": "CL05B104KO5NNNC",
+        "PCB Layer": "TopLayer",
+        "Convert to PCB": "yes"
+      },
+      "pinInfoMap": {
+        "1": {
+          "name": "",
+          "number": "1",
+          "net": "GND"
+        },
+        "2": {
+          "name": "",
+          "number": "2",
+          "net": "+3V3"
+        }
+      }
+    },
+    "gge4": {
+      "props": {
+        "Name": "1uF",
+        "Designator": "C2",
+        "Footprint": "d8d72a170ab2143e",
+        "LCSC Part Name": "1uF ±10% 25V",
+        "Supplier Part": "C52923",
+        "Manufacturer": "SAMSUNG(三星)",
+        "Manufacturer Part": "CL05A105KA5NQNC",
+        "Supplier Footprint": "0402",
+        "JLCPCB Part Class": "Basic Part",
+        "Datasheet": "https://item.szlcsc.com/datasheet/CL05A105KA5NQNC/53938.html",
+        "Supplier": "LCSC",
+        "Add into BOM": "yes",
+        "3D Model": "b7d13df3e9464d7a99d0651d1a5b4d57|0819f05c4eef4c71ace90d822a990e87",
+        "3D Model Title": "C0402_L1.0-W0.5-H0.5",
+        "3D Model Transform": "39.37,19.685,0,0,0,0,0,0,0",
+        "Value": "1uF",
+        "Tolerance": "±10%",
+        "Voltage Rating": "25V",
+        "Temperature Coefficient": "X5R",
+        "Description": "Capacitance:1uF Tolerance:±10% Tolerance:±10% Voltage Rating:25V Temperature Coefficient:X5R",
+        "Device": "a5cc28270dffb245",
+        "Unique ID": "gge4",
+        "Reuse Block": "",
+        "Group ID": "",
+        "Channel ID": "$1I5",
+        "FootprintName": "C0402",
+        "DeviceName": "CL05A105KA5NQNC",
+        "PCB Layer": "TopLayer",
+        "Convert to PCB": "yes"
+      },
+      "pinInfoMap": {
+        "1": {
+          "name": "",
+          "number": "1",
+          "net": "GND"
+        },
+        "2": {
+          "name": "",
+          "number": "2",
+          "net": "+3V3"
+        }
+      }
+    },
+    "gge2": {
+      "props": {
+        "Footprint": "9aa9520b5b19896c",
+        "Designator": "J1",
+        "LCSC Part Name": "1x5P 间距:1mm 卧贴 系列:SH",
+        "Supplier Part": "C7430447",
+        "Manufacturer": "Megastar(兆星)",
+        "Manufacturer Part": "ZX-SH1.0-5PWT",
+        "Supplier Footprint": "SMD,P=1mm,卧贴",
+        "JLCPCB Part Class": "Extended Part",
+        "Datasheet": "https://item.szlcsc.com/datasheet/ZX-SH1.0-5PWT/8430316.html",
+        "Supplier": "LCSC",
+        "Add into BOM": "yes",
+        "3D Model": "0449047782334ddeac360784c166da60|0819f05c4eef4c71ace90d822a990e87",
+        "3D Model Title": "CONN-SMD_5P-P1.00_MEGASTAR_ZX-SH1.0-5PWT",
+        "3D Model Transform": "289.763,198.8185,0,0,0,0,0,-7.874,0",
+        "Pins Structure": "1x5P",
+        "Pitch": "1mm",
+        "Mounting Type": "Surface Mount, Right Angle",
+        "Reference Series": "SH",
+        "Number of Pins": "5P",
+        "Number of Rows": "1",
+        "Number of PINs Per Row": "5",
+        "Row Spacing": "-",
+        "Current Rating": "1A",
+        "Contact Material": "Brass",
+        "Contact Plating": "Tin",
+        "Operating Temperature": "-40℃~+85℃",
+        "Voltage Rating": "50V",
+        "Plastic Material": "LCP",
+        "Flame Retardant Rating": "-",
+        "Supplementary Features": "Auxiliary Solder Pin",
+        "Color": "Beige",
+        "Z-Height of the Board": "3.15mm",
+        "X-Length of Bottom Edge on Board (Spacing Line)": "7.35mm",
+        "Y-Width of Bottom Edge on Board": "4.3mm",
+        "Name": "ZX-SH1.0-5PWT",
+        "Description": "Pins Structure:1x5P Pitch:1mm Mounting Type:Surface Mount, Right Angle Reference Series:SH Number of Pins:5P Number of Rows:1 Number of PINs Per Row:5 Row Spacing:- Current Rating:1A Contact Material:Brass Contact Plating:Tin Operating Temperature:-40℃~+8",
+        "Device": "d52472971366808c",
+        "Unique ID": "gge2",
+        "Reuse Block": "",
+        "Group ID": "",
+        "Channel ID": "$1I3",
+        "FootprintName": "CONN-SMD_5P-P1.00_MEGASTAR_ZX-SH1.0-5PWT",
+        "DeviceName": "ZX-SH1.0-5PWT",
+        "PCB Layer": "TopLayer",
+        "Convert to PCB": "yes"
+      },
+      "pinInfoMap": {
+        "1": {
+          "name": "",
+          "number": "1",
+          "net": "+3V3"
+        },
+        "2": {
+          "name": "",
+          "number": "2",
+          "net": "GND"
+        },
+        "3": {
+          "name": "",
+          "number": "3",
+          "net": "ENC_A"
+        },
+        "4": {
+          "name": "",
+          "number": "4",
+          "net": "ENC_B"
+        },
+        "5": {
+          "name": "",
+          "number": "5",
+          "net": "ENC_Z"
+        },
+        "6": {
+          "name": "",
+          "number": "6",
+          "net": ""
+        },
+        "7": {
+          "name": "",
+          "number": "7",
+          "net": ""
+        }
+      }
+    },
+    "gge1": {
+      "props": {
+        "Footprint": "1e986038d35268dc",
+        "Designator": "U1",
+        "LCSC Part Name": "磁性编码器IC",
+        "Supplier Part": "C49257133",
+        "Manufacturer": "NOVOSENSE(纳芯微)",
+        "Manufacturer Part": "MT6701QT-ACD",
+        "Supplier Footprint": "QFN-16(3x3)",
+        "JLCPCB Part Class": "Extended Part",
+        "Datasheet": "https://item.szlcsc.com/datasheet/MT6701QT-ACD/51694212.html",
+        "Supplier": "LCSC",
+        "Add into BOM": "yes",
+        "3D Model": "4e802866bf894002ad5146666526592e|0819f05c4eef4c71ace90d822a990e87",
+        "3D Model Title": "VQFN-16_L3.0-W3.0-H1.0-P0.50",
+        "3D Model Transform": "118.8974,118.8974,0,0,0,0,0.001,-0.001,0",
+        "Out Type": "ABZ；SSI；PWM",
+        "Resolution": "12bit",
+        "Rotate Speed": "55000rpm",
+        "Number of Conjugate Points of UVW": "16",
+        "Supply Voltage": "3.3V~5V",
+        "Supply Current": "10mA",
+        "Operating Temperature": "-40℃~+125℃",
+        "Features": "Incremental encoder output；Programmable hysteresis；Magnetic field too high/low warning",
+        "Name": "MT6701QT-ACD",
+        "Description": "Out Type:ABZ；SSI；PWM Resolution:12bit Rotate Speed:55000rpm Number of Conjugate Points of UVW:16 Supply Voltage:3.3V~5V Supply Voltage:3.3V~5V Supply Current:10mA Operating Temperature:-40℃~+125℃ Operating Temperature:-40℃~+125℃ Features:Incremental encod",
+        "Device": "fafb98e2f85f6f63",
+        "Unique ID": "gge1",
+        "Reuse Block": "",
+        "Group ID": "",
+        "Channel ID": "$1I2",
+        "FootprintName": "VQFN-16_L3.0-W3.0-P0.50-TL-EP1.7",
+        "DeviceName": "MT6701QT-ACD_C49257133",
+        "PCB Layer": "TopLayer",
+        "Convert to PCB": "yes"
+      },
+      "pinInfoMap": {
+        "1": {
+          "name": "",
+          "number": "1",
+          "net": ""
+        },
+        "2": {
+          "name": "",
+          "number": "2",
+          "net": ""
+        },
+        "3": {
+          "name": "",
+          "number": "3",
+          "net": ""
+        },
+        "4": {
+          "name": "",
+          "number": "4",
+          "net": ""
+        },
+        "5": {
+          "name": "",
+          "number": "5",
+          "net": ""
+        },
+        "6": {
+          "name": "",
+          "number": "6",
+          "net": "ENC_A"
+        },
+        "7": {
+          "name": "",
+          "number": "7",
+          "net": "ENC_B"
+        },
+        "8": {
+          "name": "",
+          "number": "8",
+          "net": "ENC_Z"
+        },
+        "9": {
+          "name": "",
+          "number": "9",
+          "net": ""
+        },
+        "10": {
+          "name": "",
+          "number": "10",
+          "net": ""
+        },
+        "11": {
+          "name": "",
+          "number": "11",
+          "net": ""
+        },
+        "12": {
+          "name": "",
+          "number": "12",
+          "net": ""
+        },
+        "13": {
+          "name": "",
+          "number": "13",
+          "net": "+3V3"
+        },
+        "14": {
+          "name": "",
+          "number": "14",
+          "net": "GND"
+        },
+        "15": {
+          "name": "",
+          "number": "15",
+          "net": ""
+        },
+        "16": {
+          "name": "",
+          "number": "16",
+          "net": "GND"
+        },
+        "17": {
+          "name": "",
+          "number": "17",
+          "net": "GND"
+        }
+      }
+    }
+  },
+  "designRule": {
+    "trackPhysics": {
+      "copperThickness1oz": {
+        "name": "copperThickness1oz",
+        "isDefault": true,
+        "unit": "mm",
+        "strokeValue": {
+          "1": {
+            "default": 0.254,
+            "min": 0.127,
+            "max": 2.54
+          }
+        }
+      },
+      "copperThickness2oz": {
+        "name": "copperThickness2oz",
+        "isDefault": false,
+        "unit": "mm",
+        "strokeValue": {
+          "1": {
+            "default": 0.254,
+            "min": 0.20299934,
+            "max": 2.54
+          }
+        }
+      }
+    },
+    "netRule": {
+      "+3V3": {
+        "net": "+3V3",
+        "ruleMap": {
+          "TrackPhysics": ""
+        }
+      },
+      "GND": {
+        "net": "GND",
+        "ruleMap": {
+          "TrackPhysics": ""
+        }
+      },
+      "ENC_Z": {
+        "net": "ENC_Z",
+        "ruleMap": {
+          "TrackPhysics": ""
+        }
+      },
+      "ENC_B": {
+        "net": "ENC_B",
+        "ruleMap": {
+          "TrackPhysics": ""
+        }
+      },
+      "ENC_A": {
+        "net": "ENC_A",
+        "ruleMap": {
+          "TrackPhysics": ""
+        }
+      }
+    }
+  },
+  "netClass": {},
+  "equalLengthNetGroup": {},
+  "differentialPair": {}
+}
