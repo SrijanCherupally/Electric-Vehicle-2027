@@ -193,6 +193,16 @@ void update(float dt) {
     case State::Aligning: {
       statusLed.set(LedPattern::FastBlink);
       const AlignStatus a = motorcore::alignStatus();
+      if (a == AlignStatus::Aligned || a == AlignStatus::Failed) {
+        // MT6701 sanity check: counts per electrical rev * pole pairs = CPR = 4 * PPR.
+        for (uint8_t m = 0; m < motorcore::MOTOR_COUNT; ++m) {
+          const int32_t c = motorcore::alignCountsPerErev(m);
+          Serial.printf("ALIGN M%u: %s, %ld counts/e-rev (expect %d) -> MT6701 ~%ld PPR (config %d)\n",
+                        m + 1, alignResultName(motorcore::alignResult(m)), (long)c,
+                        ENCODER_CPR / MOTOR_POLE_PAIRS, (long)(c * MOTOR_POLE_PAIRS / 4),
+                        MT6701_ABZ_PPR);
+        }
+      }
       if (a == AlignStatus::Aligned) {
         motorcore::setMode(DriveMode::Brake);
         imu.startBiasCalibration(GYRO_CAL_MS);

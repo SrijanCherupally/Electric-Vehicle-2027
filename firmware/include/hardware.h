@@ -37,6 +37,8 @@
 #define ADC_MAX_COUNTS 4095.0f
 
 // ---------- Motor encoders (J5 = M1, J6 = M2), SH1.0: 3V3, GND, A, B, Z ----------
+// MT6701 in ABZ mode (push-pull outputs at 3.3 V). Z (one pulse per rev) is
+// wired but not used yet.
 // On both connectors B is routed to the LOWER GPIO. The PIO decoder needs two
 // consecutive pins, so it is given base = B. Count direction does not matter:
 // FOC alignment measures it and every count is reported in "motor positive"

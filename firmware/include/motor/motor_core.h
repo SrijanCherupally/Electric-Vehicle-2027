@@ -47,6 +47,7 @@ void setCommands(float m1, float m2);
 void requestAlign();  // both motors, runs asynchronously on core 1
 AlignStatus alignStatus();
 AlignResult alignResult(uint8_t motor);
+int32_t alignCountsPerErev(uint8_t motor);  // measured during the last alignment
 
 int32_t position(uint8_t motor);  // motor-positive counts
 float iq(uint8_t motor);          // filtered, A
