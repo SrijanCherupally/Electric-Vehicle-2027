@@ -66,13 +66,14 @@ firmware/
 
 Do this with the car on a stand, wheels off the ground.
 
-1. **Check `config.h` against the real hardware:** `MOTOR_POLE_PAIRS`, `ENCODER_CPR` (counts per motor rev after x4), `GEAR_RATIO`, and `CSA_GAIN_V_PER_A` (check the DRV8317 GAIN-pin table; GAIN is tied to GND on this board).
-2. **Boot and watch the serial log.** It should go `ALIGN: ok` → `GYRO` → `READY`. If alignment fails, it tells you why:
-   - no motion: encoder cable or phases
-   - counts-per-e-rev wrong: pole pairs or CPR
-3. **Check directions.** Run `mtest 1`. Both wheels should spin **forward**. If one spins backwards, flip `LEFT_WHEEL_DIR` / `RIGHT_WHEEL_DIR`. If left and right are swapped, swap `LEFT_MOTOR_INDEX` / `RIGHT_MOTOR_INDEX`.
-4. **Check the gyro sign.** Run `tele on`, then turn the car counter-clockwise by hand. `heading_deg` should increase. If it doesn't, flip `IMU_YAW_SIGN`.
-5. **Measure the back-EMF feedforward.** Run `kvcal 2`, then `save`. This sets `kff_vel`.
+1. **Encoders need no setup.** The encoder boards use the MT6701QT-ACD (LCSC C49257133), which comes factory-programmed: ABZ output, 1024 PPR, Z width 1 LSB. ABZ is selected in hardware (MODE tied to GND on the encoder PCB). Keep `MT6701_ABZ_PPR = 1024`.
+2. **Check `config.h` against the real hardware:** `MOTOR_POLE_PAIRS`, `GEAR_RATIO`, and `CSA_GAIN_V_PER_A` (check the DRV8317 GAIN-pin table; GAIN is tied to GND on this board).
+3. **Boot and watch the serial log.** It should go `ALIGN: ok` → `GYRO` → `READY`. For each motor, alignment prints a line like `ALIGN M1: ok, 585 counts/e-rev (expect 585) -> MT6701 ~1024 PPR`. If alignment fails, it tells you why:
+   - **no encoder counts:** check the SH1.0 cable orientation (these cables are often reversed), the magnet gap (0.5–2 mm) and centering (within 0.3 mm), the 3V3 at the port, and the motor phases
+   - **counts per e-rev wrong:** almost always `MOTOR_POLE_PAIRS` (585 counts/e-rev is what a 7-pole-pair motor gives at 1024 PPR)
+4. **Check directions.** Run `mtest 1`. Both wheels should spin **forward**. If one spins backwards, flip `LEFT_WHEEL_DIR` / `RIGHT_WHEEL_DIR`. If left and right are swapped, swap `LEFT_MOTOR_INDEX` / `RIGHT_MOTOR_INDEX`.
+5. **Check the gyro sign.** Run `tele on`, then turn the car counter-clockwise by hand. `heading_deg` should increase. If it doesn't, flip `IMU_YAW_SIGN`.
+6. **Measure the back-EMF feedforward.** Run `kvcal 2`, then `save`. This sets `kff_vel`.
 
 ## Calibration (on the floor)
 

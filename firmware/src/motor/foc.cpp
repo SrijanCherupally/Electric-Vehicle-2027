@@ -65,8 +65,11 @@ const char* alignResultName(AlignResult r) {
     case AlignResult::NotRun: return "not run";
     case AlignResult::Ok: return "ok";
     case AlignResult::EncoderMissing: return "encoder PIO failed";
-    case AlignResult::NoMotion: return "no encoder motion (check encoder cable / motor phases)";
-    case AlignResult::PolePairMismatch: return "counts per e-rev wrong (check MOTOR_POLE_PAIRS / ENCODER_CPR)";
+    case AlignResult::NoMotion:
+      return "no encoder counts (check SH1.0 cable orientation, magnet gap 0.5-2 mm / centering, "
+             "3V3 at the port, motor phases)";
+    case AlignResult::PolePairMismatch:
+      return "counts per e-rev wrong (MT6701_ABZ_PPR or MOTOR_POLE_PAIRS)";
   }
   return "?";
 }
@@ -134,8 +137,10 @@ AlignResult FocMotor::align(float vbus) {
   brake();
 
   const int32_t delta = mid - start;
+  countsPerErev_ = (delta < 0) ? -delta : delta;  // kept even on failure, for diagnostics
   const float expected = (float)ENCODER_CPR / (float)MOTOR_POLE_PAIRS;
-  const float moved = fabsf((float)delta);
+  const float moved = (float)countsPerErev_;
+  // Reversed cable, unpowered encoder, bad magnet placement or open phases look like this.
   if (moved < 0.1f * expected) return AlignResult::NoMotion;
   if (moved < FOC_ALIGN_MIN_FRACTION * expected || moved > expected / FOC_ALIGN_MIN_FRACTION) {
     return AlignResult::PolePairMismatch;
@@ -143,7 +148,6 @@ AlignResult FocMotor::align(float vbus) {
 
   dir_ = (delta > 0) ? 1 : -1;
   zeroOffset_ = zero;
-  countsPerErev_ = delta;
   aligned_ = true;
   return AlignResult::Ok;
 }

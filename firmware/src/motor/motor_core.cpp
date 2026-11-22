@@ -34,6 +34,7 @@ volatile uint32_t s_commandSeq = 0;
 volatile uint32_t s_alignRequestSeq = 0;
 volatile AlignStatus s_alignStatus = AlignStatus::NotAligned;
 volatile AlignResult s_alignResult[MOTOR_COUNT] = {AlignResult::NotRun, AlignResult::NotRun};
+volatile int32_t s_alignCounts[MOTOR_COUNT] = {0, 0};
 volatile int32_t s_position[MOTOR_COUNT] = {0, 0};
 volatile float s_iq[MOTOR_COUNT] = {0.0f, 0.0f};
 volatile float s_uq[MOTOR_COUNT] = {0.0f, 0.0f};
@@ -81,6 +82,7 @@ void runAlignment() {
   for (uint8_t i = 0; i < MOTOR_COUNT; ++i) {
     const AlignResult r = g_motor[i].align(vbus);
     s_alignResult[i] = r;
+    s_alignCounts[i] = g_motor[i].countsPerElectricalRev();
     allOk = allOk && (r == AlignResult::Ok);
   }
   s_alignStatus = allOk ? AlignStatus::Aligned : AlignStatus::Failed;
@@ -124,6 +126,11 @@ void setup() {
   delay(5);
   g_sense.calibrateOffsets(CURRENT_OFFSET_SAMPLES);
   Drv8317::setAwake(false);
+
+  // MT6701 A/B outputs are not valid until ~50 ms after power-up.
+  while (millis() < MT6701_STARTUP_MS) {
+    tight_loop_contents();
+  }
 
   c1_rateStartUs = micros();
   s_ready = true;
@@ -237,6 +244,7 @@ void requestAlign() {
 
 AlignStatus alignStatus() { return s_alignStatus; }
 AlignResult alignResult(uint8_t m) { return m < MOTOR_COUNT ? s_alignResult[m] : AlignResult::NotRun; }
+int32_t alignCountsPerErev(uint8_t m) { return m < MOTOR_COUNT ? s_alignCounts[m] : 0; }
 
 int32_t position(uint8_t m) { return m < MOTOR_COUNT ? s_position[m] : 0; }
 float iq(uint8_t m) { return m < MOTOR_COUNT ? s_iq[m] : 0.0f; }

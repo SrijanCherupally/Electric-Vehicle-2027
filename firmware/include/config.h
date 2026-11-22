@@ -82,8 +82,17 @@
 
 // ---------- Motors + encoders ----------
 #define MOTOR_POLE_PAIRS 7           // e.g. 2204 / 2804 gimbal = 7 (12N14P)
-#define ENCODER_CPR 4096             // counts per motor rev after x4 decode (1024 PPR -> 4096)
 #define GEAR_RATIO 1.0f              // motor revs per wheel rev (1 = direct drive)
+
+// MT6701QT-ACD magnetic encoder (LCSC C49257133), one per motor shaft.
+// Factory-programmed: ABZ output, 1024 pulses/rev, Z width 1 LSB, CCW = count up.
+// ABZ is selected in hardware (MODE tied to GND on the encoder PCB), so no
+// configuration is needed or possible from this board (J5/J6 have no I2C, and
+// MT6701 EEPROM writes need VDD > 4.5 V; the ports supply 3.3 V).
+// Alignment prints the PPR it measures, so a mismatch is easy to spot.
+#define MT6701_ABZ_PPR 1024
+#define ENCODER_CPR (4 * MT6701_ABZ_PPR)  // x4 quadrature decode: counts per motor rev
+#define MT6701_STARTUP_MS 100  // A/B output starts ~50 ms after power-up; wait before aligning
 
 // ---------- FOC engine (core 1) ----------
 #define PWM_FREQUENCY_HZ 20000       // DRV8317 allows up to 200 kHz
@@ -92,7 +101,8 @@
 #define FOC_ALIGN_VOLTAGE_V 2.0f     // voltage vector used during alignment
 #define FOC_ALIGN_SWEEP_MS 800       // one electrical revolution sweep time
 #define FOC_ALIGN_SETTLE_MS 400
-#define FOC_ALIGN_MIN_FRACTION 0.5f  // measured / expected counts per e-rev to accept
+#define FOC_ALIGN_MIN_FRACTION 0.8f  // measured / expected counts per e-rev to accept
+                                     // (0.8 still catches an MT6701 left at half resolution)
 #define FOC_CURRENT_MODE 0           // 0 = voltage-mode FOC (default), 1 = dq current loop
 #define FOC_CURRENT_KP 2.0f          // V per A (current mode)
 #define FOC_CURRENT_KI 400.0f        // V per A*s (current mode)
